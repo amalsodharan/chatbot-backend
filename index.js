@@ -1,29 +1,36 @@
-const express = require('express')
-const app =express()
-require('dotenv').config()
-const bodyParser = require('body-parser')
-const getChatGPTResponse = require('./service')
-const cors = require('cors')
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import getChatGPTResponse from './service.js';
 
-app.use(cors())
+dotenv.config();
+
+const app = express();
+const PORT = 8080;
+
+app.use(cors());
 app.use(express.json());
 
 app.get('/test', (req, res) => {
-    res.json({ message : 'this is the api' })
+  res.json({ message: 'This is the API' });
 });
 
 app.post('/prompt', async (req, res) => {
-    try {
-        const input = req.body.input;
-        console.log(input);
-        const resObj = await getChatGPTResponse(input);
-        res.json({ answer: resObj });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+  try {
+    const input = req.body.input;
+    if (!input || input.trim() === '') {
+      return res.status(400).json({ error: 'Prompt is empty' });
     }
+
+    console.log(`[Prompt received]: ${input}`);
+    const answerHTML = await getChatGPTResponse(input);
+    res.json({ answer: answerHTML });
+  } catch (err) {
+    console.error('Error in /prompt route:', err.message);
+    res.status(500).json({ error: 'Failed to process the request' });
+  }
 });
 
-
-app.listen(8080, (req, res) => {
-    console.log(`Server is running at 8080`)
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
