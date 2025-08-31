@@ -1,22 +1,31 @@
 import axios from 'axios';
-import { marked } from 'marked'; // ESM-style import
+import { marked } from 'marked';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const getChatGPTResponse = async (prompt) => {
+let conversationHistory = [];
+
+const getChatGPTResponse = async (prompt, chatStatus) => {
   const startTime = Date.now();
+  if(chatStatus == 'Started'){
+    conversationHistory = [];
+    console.log("started only");
+  }
 
   if (!prompt || prompt.trim() === '') {
     throw new Error('Prompt is empty');
   }
+
+  // add user message to history
+  conversationHistory.push({ role: 'user', content: prompt });
 
   try {
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
         model: 'mistralai/mixtral-8x7b-instruct',
-        messages: [{ role: 'user', content: prompt }],
+        messages: conversationHistory, // include full chat history
       },
       {
         headers: {
@@ -33,7 +42,10 @@ const getChatGPTResponse = async (prompt) => {
 
     if (response.data?.choices?.[0]?.message?.content) {
       const rawContent = response.data.choices[0].message.content;
-      const htmlContent = marked.parse(rawContent); // Markdown to HTML
+      const htmlContent = marked.parse(rawContent);
+
+      conversationHistory.push({ role: 'assistant', content: rawContent });
+
       return htmlContent;
     } else {
       throw new Error('Invalid response from OpenRouter API');

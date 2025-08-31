@@ -15,15 +15,16 @@ app.get('/test', (req, res) => {
   res.json({ message: 'This is the API' });
 });
 
-app.post('/prompt', async (req, res) => {
+app.post('/prompt', async (req, res) => {  
   try {
     const input = req.body.input;
+    const chatStatus = req.body.chatStatus;
     if (!input || input.trim() === '') {
       return res.status(400).json({ error: 'Prompt is empty' });
     }
 
     console.log(`[Prompt received]: ${input}`);
-    const answerHTML = await getChatGPTResponse(input);
+    const answerHTML = await getChatGPTResponse(input, chatStatus);
     res.json({ answer: answerHTML });
   } catch (err) {
     console.error('Error in /prompt route:', err.message);
